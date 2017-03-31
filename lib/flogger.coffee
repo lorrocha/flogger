@@ -79,16 +79,24 @@ module.exports = Flogger =
     marker.destroy() for marker in @markers
     @markers = []
 
+    allText = te.getText().split('\n')
+    selectedText = te.getSelectedText().split('\n')
     for [line_num, complexity] in methods
-      m = te.markBufferRange [[line_num - 1, 0], [line_num - 1, 0]]
-      d = document.createElement 'span'
-      d.classList.add @classify complexity
-      d.textContent = complexity.toFixed 1
-      g.decorateMarker m, item: d, class: 'flogger'
-      @markers.push m
+      if @textIsSelected(line_num, allText, selectedText)
+        m = te.markBufferRange [[line_num - 1, 0], [line_num - 1, 0]]
+        d = document.createElement 'span'
+        d.classList.add @classify complexity
+        d.textContent = complexity.toFixed 1
+        g.decorateMarker m, item: d, class: 'flogger'
+        @markers.push m
 
   classify: (complexity) ->
     switch
       when complexity < atom.config.get('flogger.mediumThreshold') then 'low'
       when complexity < atom.config.get('flogger.highThreshold') then 'medium'
       else 'high'
+
+  textIsSelected: (line_num, allText, selectedText) ->
+    return true unless selectedText[0]
+    indexes = selectedText.map( (selected) -> allText.indexOf(selected))
+    indexes.includes(line_num - 1)
